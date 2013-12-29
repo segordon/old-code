@@ -1,0 +1,12 @@
+(defvar *number-was-odd0* nil)
+(defvar *number-was-odd1* nil)
+(defvar *number-was-odd2* nil)
+(defvar *number-was-odd3* nil)
+
+(if (oddp 5)
+    (progn (setf *number-was-odd0* t)
+    (progn (setf *number-was-odd1* t)
+    (progn (setf *number-was-odd2* t)
+    (progn (setf *number-was-odd3* t)
+           'odd-number)
+    'even-number)

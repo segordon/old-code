@@ -1,0 +1,187 @@
+
+
+Common Lisp notes (from Land of Lisp) <2013-10-12 Sat> reread
+
+* Common Lisp etiquette & tips, tricks (calling commands and syntax)
+** a command must be surrounded in parens to be called '()'
+** common lisp ignores spaces and line-breaks (new lines)
+** lisp(ers) have rules and conventions regarding formatting
+** lisp(ers) use a table format for multiple let variables, aligned vertically
+** floating point calculation is decided by use of decimal point
+*** floating point decimals 'poison' all integers that they interact with
+**  lisp handles text in two ways. code mode & data mode.
+*** lisp defaults to code mode, and as such expects a form
+**** a form is a special ordered list, which usually begins with a function)
+**** such as (expt 2 3) or (princ "hello world!") 
+*** lisp can place data that is not intended to be executed in data mode
+**** data is designated by a ' (single quote). This is called 'quoting'
+**** '(expt 5 2) = (EXPT 2 3)
+* defining variables
+** global variables (also called dynamic or special variables):
+*** 'defparameter' is destructive, overwriting original
+*** 'defvar' is non-destructive, and does not overwrite original    
+**** (defparameter parameter_name value)
+**** (defparameter foo 5)
+*** use earmuffs(*)'s around variable name if variable is global
+
+** local variables
+*** one defines a local variable with the 'let' function
+**** (let (variable declarations) ...body...)
+**** (let ((a 5) (b 6)) (+ a b)) = 11
+***** a is declared as 5, b is declared as six, and added the equal eleven
+* defining functions
+** empty parens in a function indicate that the function does not require any parameters in order to return a result
+** empty parens are really just an empty list
+** global functions
+*** defun is global
+**** (defun function_name (arguments) ...logic... ) 
+** local functions
+*** flet defines local functions
+**** (flet ((function_name (arguements) ...function body...)) ...body...)
+**** (flet ( (f (n) (+ n 10) ) (g (n) (- n 3) ))) (g (f 5) )) = 12
+*** 'labels' lets you use a local function within other local functions (recursively). It works exactly the same as flet. 
+**** (labels ((a (n) (+ n 5)) (b (n) (+ (a n) 6))) (b 10))
+
+* lists
+** Lisp puts everything into lists- but all lists are just cons cells linked.
+*** the lists are held togther by 'cons' cells.
+**** the cons cell is made up of two cells.
+**** each cell can point to any other code
+***** a data list like '(3 2 1) is made up of three cells
+***** the first node on each cell is the value
+***** the second node on each cell points to the next cell
+***** the second node on the last cell points to nil.
+** basic list functions (cons, car, cdr)
+*** cons is the basic way of linking two pieces of data
+**** this causes the lisp compiler to allocate memory to a new cell, the 'cons cell'.
+**** (cons 'chicken 'cat) = (CHICKEN . CAT)
+***** the period indicates that the user is seeing a cons list.
+**** cons can also be used to dictate the placement of an item in a list
+***** (cons 'pork '(beef chicken)) = (PORK BEEF CHICKEN)
+
+*** car grabs the first item of a list, cdr grabs the second item plus the remainder.
+**** the commands can be combined as cadr to grab only the second item without the remainder.
+
+** nil is the list terminator
+*** (cons 'chicken 'nil) = (CHICKEN)
+**** nil is terminating the list, and thus the compiler shows a list with one item.
+
+*** or (cons 'chicken ()) = CHICKEN
+**** () is interchangeable with nil.
+***** () actually represents an empty list, and is yet another way to feed the compiler nil.
+
+*** empty parens can be represented as '() () 'nil nil
+
+** nesting - lists can contain lists
+*** '(cat (duck bat) ant)
+**** the second item in this list is another list containg duck and bat.
+
+** a list which can help to find data using a look-up key is called an association list, or alist.
+*** an example can be seen here [[file+emacs:wizard-game.lisp][wizard game showing use of an alist]]
+** quasiquoting can be used to to make a list with lisp code within it.
+*** ' and ` work similarly, but with ` you can flip data modes on the fly
+**** (defun describe-path (edge) `(there is a ,(caddr edge) going ,(cadr edge) from here.))
+*** for more examples, see [[file+emacs:wizard-game.lisp][file+emacs:wizard-game.lisp]]
+* comparison
+** Obey Conrad's Rule of Thumb for Comparing Stuff:
+*** use eq to compare symbols
+**** (cond ((eq *fruit* 'apple) 'apple-certified) ((eq *fruit* 'orange) 'orange-certified))
+*** use equal for everything else
+**** this checks to see if the two items under comparison are isomorphic (look the same)
+***** (equal 'apple 'apple) = T , (equal (list 123) (list 123)) = T
+*** eql is similar to eq but also includes numbers and characters.
+**** (eql 'foo 'foo) , (eql 3.4 3.4), (eql #\a #\a)
+*** equalp is simiular to equal, but it allows for a bit more sophisticated string comparison
+**** (equalp "Bob Smith" "bob smith") = T , (equalp 0 0.0) = T 
+* strings
+** " "'s indicate a string
+*** (princ "hello world!") , string = "hello world!"
+** if you want to include double quotes in the string, prefix the quote with an escape character ' \'
+*** (princ "He yelled \"Hello World!\" from the busy street.")
+* specific functions
+** symbols
+*** + - / * = < > ? ! _ .
+*** symbols are case insensitive in lisp
+** # - tells compiler to treat the following as a function
+*** (mapcar #'car '((foo bar) (baz qux))) = (mapcar (function car) '((foo bar) (baz qux)))
+** loop - simply loops forever, until :a. Useful for creating REPLs
+*** (defun game-repl () (loop (print (evanl (read)))))
+** ash - arithemetic shift. when given -1 will halve the result. +1 doubles.
+*** thus.. add two together values together and ash them for an average    
+**** (ash (+ 30 35) -1) = 32
+*** ash, when given positive 1 as an arguement, will double the result.
+**** (ash 50 1) = 100    
+     
+** mapcar - takes a function, and then applies that function to all members of a list
+*** (mapcar #'sqrt '(1 2 3 4 5)) = (1 1.4142135 1.7320508 2 2.236068)
+*** (mapcar #'car '((foo bar) (baz qux))) = (foo baz)
+** expt - return powers (exponential multiplication)
+*** (expt 5 2) = 25
+** assoc - return a value and a key from a keylist
+*** (cdr (assoc location edges))
+** princ - return a string, but tries to do so in a human-friendly fashion (drops formattings)
+*** (princ "Hello world.")
+** append - combines many lists into a large single list
+*** (append '(mary had) '(a) '(little lamb)) = MARY HAD A LITTLE LAMB
+** list - build a list
+*** (list 'pork 'beef 'chicken) = (PORK BEEF CHICKEN)
+** push - add another item to the front of a variable list
+*** (defparameter *foo* '(1 2 3)) (push 7 *foo*) (7 1 2 3)
+** When a function ends in p, it indicates a true/false predicate, and expects to result in True. (oddp 5) : True
+** oddp - return if arguement is odd as true or false.
+** progn - adds functionality while ensuring only the last evaluation of the function is returned.
+*** (if (oddp 5) (progn (princ "hello")) 'odd number 'even number)
+*** can be used multiple times
+** member - checks to see if the given value is a member of a list.
+*** example: (if (member 1 '(3 4 1 5)) 'in-the-list 'not-in-the-list) = IN-THE-LIST
+*** be aware: member returns the tail of the list as well as a result of the search (the query itself)
+**** this is because lisp treats all non-empty fields as true, and the writer of the member function thought it'd be a useful feature.
+**** it also reduces problems with nil causing lists to incorrectly evaluate as false when returned as a tail.
+** find-if - takes another function as a parameter, and finds the first value using that function that returns true.
+*** (find-if #'oddp '(2 3 4 5 6 7)) = 3
+*** be careful of using find-if with nil values.
+** print - allows printing to console, adding a new line to the end
+** read - allows one to take input from the user
+** prin1 - allows printing to console, without a new line at the end.
+* algorithms
+** the first program, bigger-or-smaller, halves the search space each iteration
+*** this is called a binary search - ash is a common implementation
+* conditionals
+*** one important aspect of lisp is that it treats all empty lists as false.
+**** (if '() 'i-am-true 'i-am-false) = I-AM-FALSE. (if '(1) 'i-am-true 'i-am-false) = I-AM-TRUE
+*** if (if then, else, else-if)
+**** (if (condition) (then) (else))
+**** if can be used to check if list is empty
+***** (if '(1) 'stuff 'nostuff) = STUFF
+**** if only evaluates the true branch
+***** meaning you can feed the false branch garbage, and it won't error til it encounters it as true.
+*** when (when true, do) 
+**** (defvar *number-is-odd* nil) (when (oddp 5) (setf *number-is-odd* t) 'odd-number) ODD-NUMBER number-is-o   
+*** unless (when false, do) 
+**** (unless (oddp 4) (setf number-is-oidd nil) 'even number) EVEN-NUMBER number-is-odd=nil
+*** cond (when x is found, do)
+**** cond is the classic way to perform branching in lisp
+**** cond allows for imlicit progn's
+**** it is typical to end a set of conds with an always true parameter
+
+*****   (cond n ((1) (princ "1") ((2) (princ "2") (t () ))))
+**** case uses eq to compare symbols, as such it is only wise to use for branching on string values
+*** case (when x found, do this. Otherwise..)
+**** case can be used and ended with a catch-all 'otherwise' result
+***** (case n ((1) (princ "1") ((2) (princ "2") (otherwise () )))).
+*** and (do this AND this AND this)
+**** (and (oddp 5) (oddp 7) (oddp 9)) = TRUE
+*** or (do that OR that OR that, any choice is fine)
+**** (or (oddp5) (oddp 7) (oddp 9)) = TRUE
+
+**** this means that OR evaluates all conditions a true condition is found to continue branching towards.
+**** OR can also be used in this conditional example
+***** (or (oddp 4) (setf *is-it-even* t)) = TRUE
+****** do everything expressed until the first non-true condition is found
+* misc code examples
+** simple square function
+*** (defun square (n) (* n n))
+**** defines a function, 'square', that takes a number, multiplies it by itself, and returns the result.
+** list-length
+*** (defun my-length (list) (if list (1+ (my-length (cdr list))) 0))
+**** this is an example of recursion. If the list is true (has items in it), then add one to the counter, take one away, and do it again until the list is empty (list-eater)
